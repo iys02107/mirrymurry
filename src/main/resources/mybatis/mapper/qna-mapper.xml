@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.codepresso3.mirrymurry.mapper.QnaMapper">
+
+    <select id="getQnaListByMemberId" resultType="com.codepresso3.mirrymurry.dto.QnaMngDto">
+        SELECT qna_id, title, content, answer, secret, qna_time, email, role
+        FROM qna
+        JOIN member ON qna_member_id = member_id
+        LEFT JOIN store ON qna_store_id = store_id
+        WHERE qna_member_id = #{member_id}
+    </select>
+
+    <select id="getQnaList" resultType="com.codepresso3.mirrymurry.dto.QnaDetailDto">
+        SELECT qna_id, title, content, answer, secret, qna_time, user_name, email, qna_member_id, qna_store_id
+        FROM qna
+        JOIN member ON qna_member_id = member_id
+        LEFT JOIN store ON qna_store_id = store_id
+        WHERE qna_store_id = #{store_id}
+    </select>
+
+    <select id="getQnaMngList" resultType="com.codepresso3.mirrymurry.dto.QnaMngDto">
+        SELECT qna_id, title, content, answer, secret, qna_time, email, role
+        FROM qna
+        JOIN member ON qna_member_id = member_id
+        LEFT JOIN store ON qna_store_id = store_id
+        WHERE qna_store_id = #{store_id}
+    </select>
+
+    <select id="findById" resultType="com.codepresso3.mirrymurry.vo.Qna">
+        SELECT *
+        FROM qna
+        WHERE qna_id = #{qna_id}
+    </select>
+
+    <insert id="newQna">
+        INSERT INTO qna(title, content, secret, qna_time, qna_member_id, qna_store_id)
+        VALUES (#{qna.title}, #{qna.content}, #{qna.secret}, now(), #{qna.qna_member_id}, #{qna.qna_store_id})
+    </insert>
+
+
+    <delete id="deleteQna">
+        DELETE FROM qna
+        WHERE qna_id = #{qna_id}
+    </delete>
+
+    <update id="newAnswer">
+        UPDATE qna
+        SET answer= #{answer}
+        WHERE qna_id = #{qna_id}
+    </update>
+
+    <select id="countQna" resultType="Integer">
+        SELECT count(qna_id)
+        FROM qna
+        WHERE qna_store_id = #{store_id}
+    </select>
+</mapper>

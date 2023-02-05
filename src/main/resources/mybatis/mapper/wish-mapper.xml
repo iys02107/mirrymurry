@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codepresso3.mirrymurry.mapper.WishMapper">
+    <select id="wishStatus" resultType="com.codepresso3.mirrymurry.vo.Wish">
+        SELECT *
+        FROM wish
+        WHERE wish_member_id = #{member_id}
+        AND wish_store_id = #{store_id}
+    </select>
+    <insert id="wishStore">
+        INSERT INTO wish(wish_member_id, wish_store_id)
+        VALUES (#{wish.member_id}, #{wish.store_id})
+    </insert>
+    <delete id="unWishStore">
+        DELETE FROM wish
+        WHERE wish_member_id = #{wish.member_id}
+        AND wish_store_id = #{wish.store_id}
+    </delete>
+    <select id="getWishList" resultType="com.codepresso3.mirrymurry.dto.WishStoreDto">
+        select distinct a.wish_id as wish_id,
+        a.store_id as store_id,
+        m.user_name as user_name,
+        m.road_address as road_address,
+        m.detail_address as detail_address,
+        a.imgUrl as imgUrl
+        from member m
+        INNER join
+        (select distinct si.imgUrl as imgUrl, b.member_id as member_id, b.wish_id as wish_id, b.store_id as store_id from storeImg si
+        INNER join
+        (select distinct s.store_member_id as member_id, w.wish_id as wish_id, s.store_id as store_id from store s
+        INNER join wish w
+        on s.store_id = w.wish_store_id
+        where wish_member_id = #{member_id}) b
+        on img_store_id = store_id
+        where si.repImgYn = 'y') a
+        on m.member_id = a.member_id;
+    </select>
+    <delete id="unWishStoreList">
+        DELETE FROM wish
+        WHERE wish_id = #{wish_id}
+    </delete>
+</mapper>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout2}">
+
+<head>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+
+<th:block layout:fragment="script">
+    <script th:inline="javascript">
+
+    $(document).ready(function(){
+            var dt = $("#reviewTable").DataTable({
+                "pageLength": 5,
+                "lengthChange": false,
+                "searching": false,
+                "info": false,
+                "order": [ [3, "desc"] ],
+                "columnDefs": [
+                    { orderable: false, targets: 2 },
+                    { orderable: false, targets: 4 }
+                  ],
+                "language" : lang_kor,
+                "responsive": {
+                    details: {
+                        type: 'column',
+                        target: 2
+                    }
+                }
+            });
+
+            var detailRows = [];
+
+            $('#reviewTable tbody').on('click', 'td.contentCol', function () {
+                var tr = $(this).closest('tr');
+                var row = dt.row(tr);
+                var idx = detailRows.indexOf(tr.attr('id'));
+
+                if (row.child.isShown()) {
+                    tr.removeClass('details');
+                    row.child.hide();
+
+                    // Remove from the 'open' array
+                    detailRows.splice(idx, 1);
+                } else {
+                    tr.addClass('details');
+                    row.child(format(row.data())).show();
+
+                    // Add to the 'open' array
+                    if (idx === -1) {
+                        detailRows.push(tr.attr('id'));
+                    }
+                }
+            });
+        });
+
+        function format(d) {
+            return (
+                d[2]
+            );
+        }
+
+        var lang_kor = {       
+            "decimal" : "",
+            "emptyTable" : "데이터가 없습니다.",
+            "info" : "_START_ - _END_ (총 _TOTAL_ 명)",
+            "infoEmpty" : "0명",
+            "infoFiltered" : "(전체 _MAX_ 명 중 검색결과)",
+            "infoPostFix" : "",
+            "thousands" : ",",
+            "lengthMenu" : "_MENU_ 개씩 보기",
+            "loadingRecords" : "로딩중...",
+            "processing" : "처리중...",
+            "search" : "검색 : ",
+            "zeroRecords" : "검색된 데이터가 없습니다.",
+            "paginate" : {
+                "first" : "첫 페이지",
+                "last" : "마지막 페이지",
+                "next" : "다음",
+                "previous" : "이전"
+            },
+            "aria" : {
+                "sortAscending" : " :  오름차순 정렬",
+                "sortDescending" : " :  내림차순 정렬"
+            }
+        }
+
+
+
+        function deleteMenu(menu_id){
+
+            var token = $("meta[name='_csrf']").attr("content");
+            var header = $("meta[name='_csrf_header']").attr("content");
+
+            $.ajax({
+                method:"DELETE",
+                url: "/menu/deleteMenu",
+                data : {"menu_id" : menu_id},
+                beforeSend : function(xhr){
+                    /* 데이터를 전송하기 전에 헤더에 csrf값을 설정 */
+                    xhr.setRequestHeader(header, token);
+                },
+                error : function(jqXHR, status, error){
+                    if(jqXHR.status == '401'){
+                        alert('로그인 후 이용해주세요');
+                        location.href='/members/login';
+                    } else{
+                        alert(jqXHR.responseText);
+                    }
+                }
+            })
+            .done(function(response) {
+                alert('메뉴가 삭제되었습니다.');
+                location.reload();
+            });
+        }
+
+    </script>
+</th:block>
+<!-- 사용자 CSS 추가 -->
+<th:block layout:fragment="css">
+    <style>
+        .content-mg{
+            margin-left:25%;
+            margin-right:25%;
+            margin-top:2%;
+            margin-bottom:100px;
+        }
+        .repImgDiv{
+            margin-right:15px;
+            margin-left:15px;
+            height:auto;
+        }
+        .repImg{
+            height:100px;
+            width:100px;
+        }
+        .fs18{
+            font-size:18px
+        }
+        .fs24{
+            font-size:24px
+        }
+        .contentCol {
+             text-overflow: ellipsis;
+             white-space: nowrap;
+             max-width: 20px;
+             overflow: hidden;
+        }
+    </style>
+</th:block>
+
+
+<div layout:fragment="content" class="content-mg">
+
+    <h2 class="mb-4">메뉴 관리</h2>
+    <div>
+    <table id="menuTable" class="table text-center align-middle">
+        <colgroup>
+            <col width="15%"/>
+            <col width="25%"/>
+            <col width="20%"/>
+            <col width="40%"/>
+        </colgroup>
+        <thead>
+            <tr>
+                <th>카테고리</th>
+                <th>메뉴 이름</th>
+                <th>가격</th>
+                <th>수정/삭제</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="menu : ${menuList}">
+                <td th:text="*{menu.category}" id="menu.category" style="line-height: 40px"></td>
+                <td th:text="*{menu.menu_name}" id="menu.menu_name" style="line-height: 40px"></td>
+                <td th:text="*{menu.price}" id="menu.price" style="line-height: 40px"></td>
+                <td>
+                    <a th:href="@{/menu/updateMenu/{id}(id=${menu.menu_id})}"><button class="btn btn-primary" >수정</button></a>
+                    <a class="btn btn-danger" th:onclick="'javascript:deleteMenu(' + ${menu.menu_id} + ')'">삭제</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+
+</div>
+</html>

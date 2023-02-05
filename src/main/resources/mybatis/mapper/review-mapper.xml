@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.codepresso3.mirrymurry.mapper.ReviewMapper">
+    <select id="getReviewMngList" resultType="com.codepresso3.mirrymurry.dto.ReviewMngDto">
+        SELECT review_id, content, rate, reg_date, email
+        FROM review
+        JOIN member ON review_member_id = member_id
+        WHERE review_store_id = #{store_id}
+    </select>
+
+    <delete id="deleteReview">
+        DELETE FROM review
+        WHERE review_id = #{review_id}
+    </delete>
+
+    <select id="getRate" resultType="Double">
+        SELECT ifnull(avg(rate),0) as rate
+        FROM review
+        WHERE review_store_id = #{store_id}
+    </select>
+
+    <select id="calcReview" resultType="com.codepresso3.mirrymurry.dto.ReviewCalcDto">
+        SELECT ifnull(avg(rate),0) as rate, count(review_id) as reviewCount
+        FROM review
+        WHERE review_store_id = #{store_id}
+    </select>
+
+    <select id="getReviewList" resultType="com.codepresso3.mirrymurry.dto.ReviewDetailDto">
+        select distinct review_id, content, rate, reg_date, member.user_name, member.email, category, menu_name
+        from member inner join (SELECT * from member m join (select * from store s join (select * from review r join (select * from book join menu on book.book_menu_id = menu.menu_id) as b on r.review_book_id = b.book_id) as a
+        on #{store_id} = a.review_store_id) as c
+        on m.member_id = c.store_member_id) as z
+        where member.member_id = z.review_member_id;
+    </select>
+    <select id="getMyReviewMngList" resultType="com.codepresso3.mirrymurry.dto.ReviewMngDto">
+        SELECT review_id, content, rate, reg_date, email
+        FROM review
+        JOIN member ON review_member_id = member_id
+        WHERE member.member_id = #{member_id}
+    </select>
+    <insert id="saveReview">
+        INSERT INTO review(content, reg_date, rate, review_book_id, review_member_id, review_store_id)
+        VALUES (#{review.content}, now(), #{review.rate}, #{review.book_id}, #{review.member_id}, #{review.store_id})
+    </insert>
+
+</mapper>

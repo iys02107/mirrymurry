@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div class="sidebar" th:fragment="sidebar">
+    <div id="sidebar-wrapper" style="position:absolute; width: 20%; border-right: solid gray 1px;">
+        <ul class="sidebar-nav" style="list-style:none">
+            <h4 class="sidebar-brand" style="line-height:2.5em; margin-top: 1em"><a href="/stores/storePage" style="text-decoration:none; color:black">
+                <span>사업자 페이지</span>
+            </a>
+            </h4>
+            <li style="line-height:2em; font-size: 20px;"><a href="/stores/storeUpdate" style="text-decoration:none">미용실 수정</a></li>
+            <li style="line-height:2em; font-size: 20px;"><a href="/menu/addMenu" style="text-decoration:none">메뉴 등록</a></li>
+            <li style="line-height:2em; font-size: 20px;"><a href="/menu/menuMng" style="text-decoration:none">메뉴 관리</a></li>
+            <li style="line-height:2em; font-size: 20px;"><a href="/books/bookMng" style="text-decoration:none">예약 관리</a></li>
+            <li style="line-height:2em; font-size: 20px;"><a href="/reviews/reviewMng" style="text-decoration:none">리뷰 관리</a></li>
+            <li style="line-height:2em; font-size: 20px;"><a href="/qna/qnaMng" style="text-decoration:none">문의 관리</a></li>
+        </ul>
+    </div>
+</div>
+</html>

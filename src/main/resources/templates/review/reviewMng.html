@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout2}">
+
+<head>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+
+<th:block layout:fragment="script">
+    <!-- 사용자 스크립트 추가 -->
+    <script th:inline="javascript">
+
+    $(document).ready(function(){
+            var dt = $("#reviewTable").DataTable({
+                "pageLength": 5,
+                "lengthChange": false,
+                "searching": false,
+                "info": false,
+                "order": [ [3, "desc"] ],
+                "columnDefs": [
+                    { orderable: false, targets: 2 },
+                    { orderable: false, targets: 4 },
+                    { visible: false, targets: 5 }
+                  ],
+                "language" : lang_kor,
+                "responsive": {
+                    details: {
+                        type: 'column',
+                        target: 5
+                    }
+                }
+            });
+
+            var detailRows = [];
+
+            $('#reviewTable tbody').on('click', 'td.contentCol', function () {
+                var tr = $(this).closest('tr');
+                var row = dt.row(tr);
+                var idx = detailRows.indexOf(tr.attr('id'));
+
+                if (row.child.isShown()) {
+                    tr.removeClass('details');
+                    row.child.hide();
+
+                    // Remove from the 'open' array
+                    detailRows.splice(idx, 1);
+                } else {
+                    tr.addClass('details');
+                    row.child(format(row.data())).show();
+
+                    // Add to the 'open' array
+                    if (idx === -1) {
+                        detailRows.push(tr.attr('id'));
+                    }
+                }
+            });
+        });
+
+        function format(d) {
+            return (
+                d[2]
+            );
+        }
+
+        var lang_kor = {       
+            "decimal" : "",
+            "emptyTable" : "데이터가 없습니다.",
+            "info" : "_START_ - _END_ (총 _TOTAL_ 명)",
+            "infoEmpty" : "0명",
+            "infoFiltered" : "(전체 _MAX_ 명 중 검색결과)",
+            "infoPostFix" : "",
+            "thousands" : ",",
+            "lengthMenu" : "_MENU_ 개씩 보기",
+            "loadingRecords" : "로딩중...",
+            "processing" : "처리중...",
+            "search" : "검색 : ",
+            "zeroRecords" : "검색된 데이터가 없습니다.",
+            "paginate" : {
+                "first" : "첫 페이지",
+                "last" : "마지막 페이지",
+                "next" : "다음",
+                "previous" : "이전"
+            },
+            "aria" : {
+                "sortAscending" : " :  오름차순 정렬",
+                "sortDescending" : " :  내림차순 정렬"
+            }
+        }
+
+        function deleteReview(review_id){
+            var token = $("meta[name='_csrf']").attr("content");
+            var header = $("meta[name='_csrf_header']").attr("content");
+
+            var url = "/reviews/delete/" + review_id;
+            var paramData = {
+               review_id : review_id
+            };
+
+            var param = JSON.stringify(paramData);
+
+            $.ajax({
+                url      : url,
+                type     : "DELETE",
+                contentType : "application/json",
+                data     : param,
+                beforeSend : function(xhr){
+                    /* 데이터를 전송하기 전에 헤더에 csrf값을 설정 */
+                    xhr.setRequestHeader(header, token);
+                },
+                cache   : false,
+                success  : function(result, status){
+                    alert("리뷰가 삭제되었습니다.");
+                    location.href='/reviews/reviewMng';
+                },
+                error : function(jqXHR, status, error){
+                    if(jqXHR.status == '401'){
+                        alert('로그인 후 이용해주세요');
+                        location.href='/members/login';
+                    } else{
+                        alert(jqXHR.responseText);
+                    }
+                }
+            });
+        }
+    </script>
+</th:block>
+<!-- 사용자 CSS 추가 -->
+<th:block layout:fragment="css">
+    <style>
+        .content-mg{
+            margin-left:25%;
+            margin-right:25%;
+            margin-top:2%;
+            margin-bottom:100px;
+        }
+        .repImgDiv{
+            margin-right:15px;
+            margin-left:15px;
+            height:auto;
+        }
+        .repImg{
+            height:100px;
+            width:100px;
+        }
+        .fs18{
+            font-size:18px
+        }
+        .fs24{
+            font-size:24px
+        }
+        .contentCol {
+             text-overflow: ellipsis;
+             white-space: nowrap;
+             max-width: 20px;
+             overflow: hidden;
+        }
+    </style>
+</th:block>
+
+<div layout:fragment="content" class="content-mg">
+
+    <div th:if="${#strings.equals(role, 'STORE')}">
+        <h2 class="mb-4">
+            리뷰 관리
+        </h2>
+    </div>
+    <div th:unless="${#strings.equals(role, 'STORE')}">
+        <h2 class="mb-4">
+            리뷰 내역
+        </h2>
+    </div>
+
+    <div>
+        <table id="reviewTable" class="table text-center align-middle">
+            <colgroup>
+                <col width="10%"/>
+                <col width="20%"/>
+                <col width="35%"/>
+                <col width="20%"/>
+                <col width="15%"/>
+            </colgroup>
+            <thead>
+            <tr>
+                <th>별점</th>
+                <th>작성자</th>
+                <th>리뷰</th>
+                <th>작성일</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="review : ${reviews}">
+                <td th:block th:switch="${review.rate}" style="line-height: 120px">
+                    <span th:case="1">★☆☆☆☆</span>
+                    <span th:case="2">★★☆☆☆</span>
+                    <span th:case="3">★★★☆☆</span>
+                    <span th:case="4">★★★★☆</span>
+                    <span th:case="5">★★★★★</span>
+                    </th:block>
+                </td>
+                <td th:text="${review.email}" style="line-height: 120px"></td>
+                <td th:text="${review.content}" class="contentCol" style="cursor: pointer; line-height: 120px"></td>
+                <td th:text="${#strings.substring(review.reg_date, 0, 10)}" style="line-height: 120px"></td>
+                <td style="line-height: 120px">
+                    <div th:if="${#strings.equals(role, 'STORE')}">
+                        </div>
+                    <div th:unless="${#strings.equals(role, 'STORE')}">
+                        <button class="btn btn-danger" th:value="${review.review_id}" onclick="deleteReview(this.value)">삭제</button>
+                    </div>
+                </td>
+                <td>
+                    <span th:text="${review.content}"></span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</html>

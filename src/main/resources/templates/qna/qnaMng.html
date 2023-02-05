@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout2}">
+
+<head>
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+</head>
+
+<!-- 사용자 스크립트 추가 -->
+<th:block layout:fragment="script">
+
+
+
+  <script th:inline="javascript">
+
+    $(document).ready(function(){
+
+            var dt = $("#qnaTable").DataTable({
+                "pageLength": 5,
+                "lengthChange": false,
+                "searching": false,
+                "info": false,
+                "order": [ [3, "desc"] ],
+                "columnDefs": [
+                    { visible: false, targets: 4 }
+                  ],
+                "language" : lang_kor,
+                "responsive": {
+                    details: {
+                        type: 'column',
+                        target: 4
+                    }
+                }
+            });
+
+            var detailRows = [];
+
+            $('#qnaTable tbody').on('click', 'td.contentCol', function () {
+                var tr = $(this).closest('tr');
+                var row = dt.row(tr);
+                var idx = detailRows.indexOf(tr.attr('id'));
+
+
+                if (row.child.isShown()) {
+                    tr.removeClass('details');
+                    row.child.hide();
+
+                    // Remove from the 'open' array
+                    detailRows.splice(idx, 1);
+                } else {
+                    tr.addClass('details');
+                    row.child(format(row.data())).show();
+
+
+                    // Add to the 'open' array
+                    if (idx === -1) {
+                        detailRows.push(tr.attr('id'));
+                    }
+                }
+            });
+        });
+
+        function format(d) {
+             return (
+              d[4]
+             );
+        }
+        var lang_kor = {       
+            "decimal" : "",
+            "emptyTable" : "등록된 문의가 없습니다.",
+            "info" : "_START_ - _END_ (총 _TOTAL_ 명)",
+            "infoEmpty" : "0명",
+            "infoFiltered" : "(전체 _MAX_ 명 중 검색결과)",
+            "infoPostFix" : "",
+            "thousands" : ",",
+            "lengthMenu" : "_MENU_ 개씩 보기",
+            "loadingRecords" : "로딩중...",
+            "processing" : "처리중...",
+            "search" : "검색 : ",
+            "zeroRecords" : "검색된 데이터가 없습니다.",
+            "paginate" : {
+                "first" : "첫 페이지",
+                "last" : "마지막 페이지",
+                "next" : "다음",
+                "previous" : "이전"
+            },
+            "aria" : {
+                "sortAscending" : " :  오름차순 정렬",
+                "sortDescending" : " :  내림차순 정렬"
+            }
+        };
+
+
+    </script>
+
+</th:block>
+
+<!-- 사용자 CSS 추가 -->
+<th:block layout:fragment="css">
+  <style>
+        .content-mg{
+            margin-left:25%;
+            margin-right:25%;
+            margin-top:2%;
+            margin-bottom:100px;
+        }
+        .repImgDiv{
+            margin-right:15px;
+            margin-left:15px;
+            height:auto;
+        }
+        .repImg{
+            height:100px;
+            width:100px;
+        }
+        .fs18{
+            font-size:18px
+        }
+        .fs24{
+            font-size:24px
+        }
+        .contentCol {
+             text-overflow: ellipsis;
+             white-space: nowrap;
+             max-width: 20px;
+             overflow: hidden;
+        }
+        .table td{
+            border-top: 0px;
+        }
+
+    </style>
+</th:block>
+
+<div layout:fragment="content" class="content-mg">
+
+  <div th:if="${#strings.equals(role, 'STORE')}">
+  <h2 class="mb-4">
+    문의 관리
+  </h2>
+  </div>
+  <div th:unless="${#strings.equals(role, 'STORE')}">
+    <h2 class="mb-4">
+      문의 내역
+    </h2>
+  </div>
+
+  <div>
+    <table id="qnaTable" class="table text-center align-middle">
+      <colgroup>
+        <col width="25%"/>
+        <col width="30%"/>
+        <col width="25%"/>
+        <col width="20%"/>
+      </colgroup>
+      <thead>
+      <tr>
+        <th>작성자</th>
+        <th>제목</th>
+        <th>작성일</th>
+        <th>답변여부</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="qna : ${qnaList}">
+        <td th:text="${qna.email}"></td>
+        <td th:text="${qna.title}" class="contentCol" style="cursor: pointer "></td>
+        <td th:text="${#strings.substring(qna.qna_time, 0, 16)}"></td>
+        <td>
+          <div th:if="${qna.answer} == null">
+            <div th:if="${#strings.equals(role, 'STORE')}">
+              <a class="btn btn-primary" th:href="@{'/qna/answer/new/' + ${qna.qna_id}}">답변하기</a>
+            </div>
+            <div th:unless="${#strings.equals(role, 'STORE')}">
+              <span>답변대기</span>
+            </div>
+          </div>
+          <div th:unless="${qna.answer} == null">답변완료</div>
+        </td>
+        <td>
+          <div th:if="${qna.answer} == null">Q:
+            <span th:text="${qna.content}"></span>
+          </div>
+          <div th:unless="${qna.answer} == null">Q:
+            <span th:text="${qna.content}"></span><br>
+            A: <span th:text="${qna.answer}"></span>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</html>
